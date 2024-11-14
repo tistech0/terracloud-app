@@ -14,14 +14,24 @@ RUN docker-php-ext-install pdo_mysql
 
 RUN apt-get update && apt-get install -y git unzip p7zip-full
 
-# Configure Apache ServerName
-RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
-
 # Installez Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Copiez les fichiers de l'application dans le conteneur
 COPY . /var/www/html/
+
+# Créer les répertoires nécessaires
+RUN mkdir -p /var/www/html/bootstrap/cache \
+    && mkdir -p /var/www/html/storage/app/public \
+    && mkdir -p /var/www/html/storage/framework/cache \
+    && mkdir -p /var/www/html/storage/framework/sessions \
+    && mkdir -p /var/www/html/storage/framework/testing \
+    && mkdir -p /var/www/html/storage/framework/views \
+    && mkdir -p /var/www/html/storage/logs
+
+# Définir les permissions
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
+    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
 # Créer et configurer le fichier .env
 COPY .env.example /var/www/html/.env
@@ -36,9 +46,6 @@ RUN sed -i "s#DB_CONNECTION=.*#DB_CONNECTION=${DB_CONNECTION}#" /var/www/html/.e
 WORKDIR /var/www/html
 RUN composer install --no-dev --no-interaction --prefer-dist
 
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
-RUN chmod -R 755 /var/www/html/storage /var/www/html/bootstrap/cache
-
 # Modifiez la configuration d'Apache pour pointer vers le répertoire public
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
@@ -46,10 +53,6 @@ RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf
 
 # Activez le module Apache Rewrite
 RUN a2enmod rewrite
-
-# Copier le script d'entrypoint
-COPY docker-entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Exposez le port 80
 EXPOSE 80
