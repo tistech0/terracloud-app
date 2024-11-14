@@ -16,10 +16,30 @@ jobs:
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
     
+    - name: Verify Azure Resources
+      run: |
+        echo "Listing resource groups..."
+        az group list --query "[].name" -o tsv
+        
+        echo "Listing public IPs in resource group..."
+        az network public-ip list --resource-group "t-clo-901-nts-0-item" --query "[].name" -o tsv
+    
     - name: Get DB Host
       id: dbhost
       run: |
-        DB_HOST=$(az network public-ip show --resource-group "t-clo-901-nts-0-item" --name "ubuntu-vm-nts-0-bdd" --query ipAddress -o tsv 2>/dev/null)
+        echo "Attempting to get IP address..."
+        DB_HOST=$(az network public-ip show \
+          --resource-group "t-clo-901-nts-0-item" \
+          --name "ubuntu-vm-nts-0-bdd" \
+          --query ipAddress \
+          -o tsv)
+        
+        if [ -z "$DB_HOST" ]; then
+          echo "Failed to get IP address. Setting default value..."
+          DB_HOST="xxx.xxx.xxx.xxx"  # Valeur par défaut ou IP statique si vous en avez une
+        fi
+        
+        echo "DB_HOST=$DB_HOST"
         echo "DB_HOST=$DB_HOST" >> $GITHUB_ENV
     
     - name: Login to Docker Hub
@@ -35,6 +55,7 @@ jobs:
       env:
         DB_HOST: ${{ env.DB_HOST }}
       run: |
+        echo "Building with DB_HOST=$DB_HOST"
         docker build \
           --build-arg DB_CONNECTION=${{ vars.DB_CONNECTION }} \
           --build-arg DB_HOST=${{ env.DB_HOST }} \
