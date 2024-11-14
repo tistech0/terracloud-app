@@ -72,11 +72,6 @@ jobs:
           --build-arg DB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
           -t tistech0/countersepitechapp:latest \
           -t tistech0/countersepitechapp:${{ github.sha }} .
-
-    - name: Verify image configuration
-      run: |
-        echo "=== Verifying .env in built image ==="
-        docker run --rm tistech0/countersepitechapp:latest cat /var/www/html/.env
         
     - name: Push Docker image
       run: |
