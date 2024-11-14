@@ -9,14 +9,6 @@ ARG DB_DATABASE
 ARG DB_USERNAME
 ARG DB_PASSWORD
 
-# Définir les variables d'environnement à partir des arguments
-ENV DB_CONNECTION=${DB_CONNECTION}
-ENV DB_HOST=${DB_HOST}
-ENV DB_PORT=${DB_PORT}
-ENV DB_DATABASE=${DB_DATABASE}
-ENV DB_USERNAME=${DB_USERNAME}
-ENV DB_PASSWORD=${DB_PASSWORD}
-
 # Installez les extensions PHP nécessaires
 RUN docker-php-ext-install pdo_mysql
 
@@ -33,14 +25,14 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Copiez les fichiers de l'application dans le conteneur
 COPY . /var/www/html/
 
-# Créer le fichier .env à partir des variables d'environnement
-RUN php -r "file_exists('.env') || copy('.env.example', '.env');" && \
-    sed -i "s/DB_CONNECTION=.*/DB_CONNECTION=${DB_CONNECTION}/" /var/www/html/.env && \
-    sed -i "s/DB_HOST=.*/DB_HOST=${DB_HOST}/" /var/www/html/.env && \
-    sed -i "s/DB_PORT=.*/DB_PORT=${DB_PORT}/" /var/www/html/.env && \
-    sed -i "s/DB_DATABASE=.*/DB_DATABASE=${DB_DATABASE}/" /var/www/html/.env && \
-    sed -i "s/DB_USERNAME=.*/DB_USERNAME=${DB_USERNAME}/" /var/www/html/.env && \
-    sed -i "s/DB_PASSWORD=.*/DB_PASSWORD=${DB_PASSWORD}/" /var/www/html/.env
+# Créer et configurer le fichier .env
+COPY .env.example /var/www/html/.env
+RUN sed -i "s#DB_CONNECTION=.*#DB_CONNECTION=${DB_CONNECTION}#" /var/www/html/.env && \
+    sed -i "s#DB_HOST=.*#DB_HOST=${DB_HOST}#" /var/www/html/.env && \
+    sed -i "s#DB_PORT=.*#DB_PORT=${DB_PORT}#" /var/www/html/.env && \
+    sed -i "s#DB_DATABASE=.*#DB_DATABASE=${DB_DATABASE}#" /var/www/html/.env && \
+    sed -i "s#DB_USERNAME=.*#DB_USERNAME=${DB_USERNAME}#" /var/www/html/.env && \
+    sed -i "s#DB_PASSWORD=.*#DB_PASSWORD=${DB_PASSWORD}#" /var/www/html/.env
 
 # Installez les dépendances de l'application
 RUN composer install --no-dev --optimize-autoloader
@@ -56,6 +48,9 @@ RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-av
 
 # Activez le module Apache Rewrite
 RUN a2enmod rewrite
+
+# Générer la clé d'application Laravel si nécessaire
+RUN php artisan key:generate --force
 
 # Nettoyer le cache
 RUN php artisan config:clear && \
