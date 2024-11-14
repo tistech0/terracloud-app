@@ -20,6 +20,17 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Copiez les fichiers de l'application dans le conteneur
 COPY . /var/www/html/
 
+# Créez les répertoires nécessaires et définissez les permissions
+RUN mkdir -p /var/www/html/bootstrap/cache \
+    && mkdir -p /var/www/html/storage/app/public \
+    && mkdir -p /var/www/html/storage/framework/cache \
+    && mkdir -p /var/www/html/storage/framework/sessions \
+    && mkdir -p /var/www/html/storage/framework/testing \
+    && mkdir -p /var/www/html/storage/framework/views \
+    && mkdir -p /var/www/html/storage/logs \
+    && chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
+    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+
 # Créer et configurer le fichier .env
 COPY .env.example /var/www/html/.env
 RUN sed -i "s#DB_CONNECTION=.*#DB_CONNECTION=${DB_CONNECTION}#" /var/www/html/.env && \
@@ -30,10 +41,8 @@ RUN sed -i "s#DB_CONNECTION=.*#DB_CONNECTION=${DB_CONNECTION}#" /var/www/html/.e
     sed -i "s#DB_PASSWORD=.*#DB_PASSWORD=${DB_PASSWORD}#" /var/www/html/.env
 
 # Installez les dépendances de l'application
-RUN composer install
-
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
-RUN chmod -R 755 /var/www/html/storage /var/www/html/bootstrap/cache
+WORKDIR /var/www/html
+RUN composer install --no-dev --no-interaction --prefer-dist
 
 # Modifiez la configuration d'Apache pour pointer vers le répertoire public
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
