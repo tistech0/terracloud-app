@@ -16,6 +16,12 @@ jobs:
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
     
+    - name: Get DB Host
+      id: dbhost
+      run: |
+        DB_HOST=$(az network public-ip show --resource-group "t-clo-901-nts-0-item" --name "ubuntu-vm-nts-0-bdd" --query ipAddress -o tsv 2>/dev/null)
+        echo "DB_HOST=$DB_HOST" >> $GITHUB_ENV
+    
     - name: Login to Docker Hub
       uses: docker/login-action@v3
       with:
@@ -25,13 +31,18 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
     
-    # - name: Build and push Docker image
-    #   run: |
-    #     docker build \
-    #       --build-arg DB_CONNECTION=${{ vars.DB_CONNECTION }} \
-    #       --build-arg DB_PORT=${{ vars.DB_PORT }} \
-    #       --build-arg DB_DATABASE=${{ vars.DB_DATABASE }} \
-    #       --build-arg DB_USERNAME=${{ vars.DB_USERNAME }} \
-    #       --build-arg DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
-    #       -t tistech0/countersepitechapp:latest .
-    #     docker push tistech0/countersepitechapp:latest
+    - name: Build and push Docker image
+      env:
+        DB_HOST: ${{ env.DB_HOST }}
+      run: |
+        docker build \
+          --build-arg DB_CONNECTION=${{ vars.DB_CONNECTION }} \
+          --build-arg DB_HOST=${{ env.DB_HOST }} \
+          --build-arg DB_PORT=${{ vars.DB_PORT }} \
+          --build-arg DB_DATABASE=${{ vars.DB_DATABASE }} \
+          --build-arg DB_USERNAME=${{ vars.DB_USERNAME }} \
+          --build-arg DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
+          -t tistech0/countersepitechapp:latest \
+          -t tistech0/countersepitechapp:${{ github.sha }} .
+        docker push tistech0/countersepitechapp:latest
+        docker push tistech0/countersepitechapp:${{ github.sha }}
