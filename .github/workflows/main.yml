@@ -11,6 +11,13 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '7.4'
+        extensions: pdo_mysql, zip
+        tools: composer:v2
+    
     - name: Login to Azure
       uses: azure/login@v1
       with:
