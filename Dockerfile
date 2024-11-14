@@ -17,6 +17,10 @@ RUN apt-get update && apt-get install -y git unzip p7zip-full
 # Installez Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
+# Copiez le script d'entrypoint et rendez-le exécutable
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 # Copiez les fichiers de l'application dans le conteneur
 COPY . /var/www/html/
 
@@ -58,4 +62,4 @@ RUN a2enmod rewrite
 EXPOSE 80
 
 # Définir l'entrypoint
-ENTRYPOINT ["docker-entrypoint.sh"]
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
