@@ -81,4 +81,3 @@ jobs:
     - name: Push Docker image
       run: |
         docker push tistech0/countersepitechapp:latest
-        docker push tistech0/countersepitechapp:${{ github.sha }}
