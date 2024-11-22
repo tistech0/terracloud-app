@@ -1,5 +1,5 @@
 # Utilisez une image Docker officielle pour PHP 7.4 avec Apache
-FROM php:7.4-apache
+FROM php:8.1-apache
 
 # Définir les arguments de build
 ARG DB_CONNECTION
