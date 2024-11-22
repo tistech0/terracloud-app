@@ -22,7 +22,7 @@ COPY docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Copiez les fichiers de l'application dans le conteneur
-COPY . /var/www/html/
+COPY . /var/www/html/public/
 
 # Créer les répertoires nécessaires
 RUN mkdir -p /var/www/html/bootstrap/cache \
@@ -38,16 +38,16 @@ RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cac
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
 # Créer et configurer le fichier .env
-COPY .env.example /var/www/html/.env
-RUN sed -i "s#DB_CONNECTION=.*#DB_CONNECTION=${DB_CONNECTION}#" /var/www/html/.env && \
-    sed -i "s#DB_HOST=.*#DB_HOST=${DB_HOST}#" /var/www/html/.env && \
-    sed -i "s#DB_PORT=.*#DB_PORT=${DB_PORT}#" /var/www/html/.env && \
-    sed -i "s#DB_DATABASE=.*#DB_DATABASE=${DB_DATABASE}#" /var/www/html/.env && \
-    sed -i "s#DB_USERNAME=.*#DB_USERNAME=${DB_USERNAME}#" /var/www/html/.env && \
-    sed -i "s#DB_PASSWORD=.*#DB_PASSWORD=${DB_PASSWORD}#" /var/www/html/.env
+COPY .env.example /var/www/html/public/.env
+RUN sed -i "s#DB_CONNECTION=.*#DB_CONNECTION=${DB_CONNECTION}#" /var/www/html/public/.env && \
+    sed -i "s#DB_HOST=.*#DB_HOST=${DB_HOST}#" /var/www/html/public/.env && \
+    sed -i "s#DB_PORT=.*#DB_PORT=${DB_PORT}#" /var/www/html/public/.env && \
+    sed -i "s#DB_DATABASE=.*#DB_DATABASE=${DB_DATABASE}#" /var/www/html/public/.env && \
+    sed -i "s#DB_USERNAME=.*#DB_USERNAME=${DB_USERNAME}#" /var/www/html/public/.env && \
+    sed -i "s#DB_PASSWORD=.*#DB_PASSWORD=${DB_PASSWORD}#" /var/www/html/public/.env
 
 # Installez les dépendances de l'application
-WORKDIR /var/www/html
+WORKDIR /var/www/html/public
 RUN composer install --no-dev --no-interaction --prefer-dist
 
 # Modifiez la configuration d'Apache pour pointer vers le répertoire public
