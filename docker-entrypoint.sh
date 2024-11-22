@@ -4,7 +4,7 @@ echo "Waiting for database to be ready..."
 max_tries=30
 counter=1
 
-while ! php artisan db:monitor > /dev/null 2>&1; do
+while ! php artisan db > /dev/null 2>&1; do
     if [ $counter -gt $max_tries ]; then
         echo "Unable to connect to the database after $max_tries attempts. Exiting..."
         exit 1
