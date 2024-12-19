@@ -7,72 +7,20 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     steps:
     - uses: actions/checkout@v2
-    
-    - name: Setup PHP
-      uses: shivammathur/setup-php@v2
-      with:
-        php-version: '8.1'
-        extensions: pdo_mysql, zip
-        tools: composer:v2
-    
-    - name: Login to Azure
-      uses: azure/login@v1
-      with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
-    
-    - name: Get DB Host
-      id: dbhost
-      run: |
-        echo "Attempting to get IP address..."
-        DB_HOST=$(az network public-ip show \
-          --resource-group "t-clo-901-nts-0-items" \
-          --name "ubuntu-vm-nts-0-bdd" \
-          --query ipAddress \
-          -o tsv)
-        
-        if [ -z "$DB_HOST" ]; then
-          echo "Failed to get IP address. Setting default value..."
-          DB_HOST="xxx.xxx.xxx.xxx"  # Valeur par défaut
-        fi
-        
-        echo "DB_HOST=$DB_HOST"
-        echo "DB_HOST=$DB_HOST" >> $GITHUB_ENV
 
-    - name: Debug Variables
-      run: |
-        echo "=== Environment Variables Check ==="
-        echo "DB_CONNECTION: ${{ vars.DB_CONNECTION }}"
-        echo "DB_HOST: ${{ env.DB_HOST }}"
-        echo "DB_PORT: ${{ vars.DB_PORT }}"
-        echo "DB_DATABASE: ${{ vars.DB_DATABASE }}"
-        echo "DB_USERNAME: ${{ vars.DB_USERNAME }}"
-        echo "=== End Variables Check ==="
-      
     - name: Login to Docker Hub
       uses: docker/login-action@v3
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
     
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-    
-    - name: Build Docker image
-      run: |
-        echo "=== Building with args ==="
-        docker build \
-          --build-arg DB_CONNECTION="${{ vars.DB_CONNECTION }}" \
-          --build-arg DB_HOST="${{ env.DB_HOST }}" \
-          --build-arg DB_PORT="${{ vars.DB_PORT }}" \
-          --build-arg DB_DATABASE="${{ vars.DB_DATABASE }}" \
-          --build-arg DB_USERNAME="${{ vars.DB_USERNAME }}" \
-          --build-arg DB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
-          -t tistech0/countersepitechapp:latest \
-          -t tistech0/countersepitechapp:${{ github.sha }} .
-        
-    - name: Push Docker image
-      run: |
-        docker push tistech0/countersepitechapp:latest
+    - name: Build and Push Docker image
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        file: Dockerfile
+        tags: tistech0/countersepitechapp:latest
+        push: true
