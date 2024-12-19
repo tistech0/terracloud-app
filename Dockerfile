@@ -16,6 +16,7 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 RUN wget -O dockerize.tar.gz https://github.com/jwilder/dockerize/releases/download/${DOCKERIZE_VERSION}/dockerize-linux-amd64-${DOCKERIZE_VERSION}.tar.gz \
     && tar -C /usr/local/bin -xzvf dockerize.tar.gz \
     && rm dockerize.tar.gz \
+    && chmod +x /usr/local/bin/dockerize \
     && apt-get autoremove -yqq --purge wget \
     && rm -rf /var/lib/apt/lists/*
 
@@ -41,4 +42,4 @@ RUN a2enmod rewrite
 EXPOSE 80
 
 # Commande par défaut pour valoriser le fichier .env et démarrer Apache
-CMD dockerize -template /var/www/html/.env.tmpl:/var/www/html/.env apache2-foreground
+CMD ["dockerize", "-template", "/var/www/html/.env.tmpl:/var/www/html/.env", "apache2-foreground"]
