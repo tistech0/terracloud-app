@@ -42,4 +42,4 @@ RUN a2enmod rewrite
 EXPOSE 80
 
 # Commande par défaut pour valoriser le fichier .env et démarrer Apache
-CMD ["dockerize", "-template", "/var/www/html/.env.tmpl:/var/www/html/.env", "apache2-foreground"]
+CMD ["sh", "-c", "printenv && dockerize -template /var/www/html/.env.tmpl:/var/www/html/.env apache2-foreground"]
