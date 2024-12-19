@@ -1,11 +1,13 @@
 # Utilisez une image Docker officielle pour PHP 7.4 avec Apache
 FROM php:8.1-apache
 
+ENV DOCKERIZE_VERSION v0.9.1
+
 # Installez les extensions PHP nécessaires
 RUN docker-php-ext-install pdo_mysql
 
 # Installez des outils nécessaires
-RUN apt-get update && apt-get install -y git unzip p7zip-full curl
+RUN apt-get update && apt-get install -y git unzip p7zip-full curl && wget -O - https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz | tar xzf - -C /usr/local/bin \ && apt-get autoremove -yqq --purge wget && rm -rf /var/lib/apt/lists/*
 
 # Installez Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
