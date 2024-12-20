@@ -57,5 +57,9 @@ RUN a2enmod rewrite
 # Exposer le port 80
 EXPOSE 80
 
+# Ajouter un script d'entrée personnalisé
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
 # Commande par défaut
-CMD ["sh", "-c", "ls -la /var/www/html/.env.tmpl && ls -la /var/www/html/public && dockerize -template /var/www/html/.env.tmpl:/var/www/html/.env apache2-foreground"]
+CMD ["entrypoint.sh"]
