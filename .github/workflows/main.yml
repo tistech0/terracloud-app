@@ -23,10 +23,10 @@ jobs:
           test -f .env.tmpl || (echo ".env.tmpl is missing" && exit 1)
           test -d public || (echo "public directory is missing" && exit 1)
 
-      # Étape 3 : Construire l'image Docker
-      - name: Build Docker Image
+      # Étape 3 : Construire l'image Docker sans cache
+      - name: Build Docker Image Without Cache
         run: |
-          docker build -t countersepitechapp:latest .
+          docker build --no-cache -t countersepitechapp:latest .
 
       # Étape 4 : Vérifier l'image Docker
       - name: Verify Docker Image

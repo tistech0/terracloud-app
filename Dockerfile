@@ -1,11 +1,12 @@
 # Utilisez une image Docker officielle pour PHP 8.1 avec Apache
 FROM php:8.1-apache
 
+# Définir les variables d'environnement
 ENV DOCKERIZE_VERSION v0.9.1
+ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
 
 # Définir le contexte de travail
 WORKDIR /var/www/html
-ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
 
 # Installer les extensions PHP nécessaires
 RUN docker-php-ext-install pdo_mysql
@@ -25,28 +26,21 @@ RUN wget -O dockerize.tar.gz https://github.com/jwilder/dockerize/releases/downl
     && rm dockerize.tar.gz \
     && chmod +x /usr/local/bin/dockerize
 
-# Copier les fichiers de l'application, y compris le fichier .env.tmpl et le répertoire public
+# Copier les fichiers de l'application
 COPY . /var/www/html/
 
-# Vérifier que les fichiers nécessaires sont bien présents dans l'image
-RUN ls -la /var/www/html/ && ls -la /var/www/html/public && ls -la /var/www/html/.env.tmpl
-
-# Vérifier que les fichiers sont correctement copiés (DEBUG)
-RUN ls -la /var/www/html && ls -la /var/www/html/public
-
-# Copier le fichier .env.tmpl et définir les permissions
-COPY .env.tmpl /var/www/html/.env.tmpl
-RUN chmod 644 /var/www/html/.env.tmpl
-RUN chown www-data:www-data /var/www/html/.env.tmpl
+# Vérifier la présence des fichiers
+RUN echo "Vérification des fichiers copiés" && ls -la /var/www/html/ && ls -la /var/www/html/public
 
 # Installer les dépendances Laravel
 RUN composer install --optimize-autoloader --no-dev
 
 # Définir les permissions pour Laravel
-RUN chown -R www-data:www-data /var/www/html
-RUN chmod -R 755 /var/www/html
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html \
+    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Modifier la configuration d'Apache pour pointer vers le répertoire public
+# Modifier la configuration d'Apache
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
