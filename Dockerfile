@@ -58,4 +58,4 @@ RUN a2enmod rewrite
 EXPOSE 80
 
 # Commande par défaut
-CMD ["sh", "-c", "echo 'Vérification des fichiers copiés :'; ls -la /var/www/html/.env.tmpl /var/www/html/public && dockerize -template /var/www/html/.env.tmpl:/var/www/html/.env apache2-foreground"]
+CMD ["sh", "-c", "ls -la /var/www/html/.env.tmpl && ls -la /var/www/html/public && dockerize -template /var/www/html/.env.tmpl:/var/www/html/.env apache2-foreground"]
