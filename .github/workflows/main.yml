@@ -41,5 +41,5 @@ jobs:
           DOCKER_PASSWORD: ${{ secrets.DOCKERHUB_TOKEN }}
         run: |
           echo "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USERNAME" --password-stdin
-          docker tag countersepitechapp:latest epitechmscpropromo2025/countersepitechapp:latest
-          docker push epitechmscpropromo2025/countersepitechapp:latest
+          docker tag countersepitechapp:latest tistech0/countersepitechapp:latest
+          docker push tistech0/countersepitechapp:latest
