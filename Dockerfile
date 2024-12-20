@@ -25,8 +25,11 @@ RUN wget -O dockerize.tar.gz https://github.com/jwilder/dockerize/releases/downl
     && rm dockerize.tar.gz \
     && chmod +x /usr/local/bin/dockerize
 
-# Copier les fichiers de l'application
+# Copier les fichiers de l'application, y compris le fichier .env.tmpl et le répertoire public
 COPY . /var/www/html/
+
+# Vérifier que les fichiers nécessaires sont bien présents dans l'image
+RUN ls -la /var/www/html/ && ls -la /var/www/html/public && ls -la /var/www/html/.env.tmpl
 
 # Vérifier que les fichiers sont correctement copiés (DEBUG)
 RUN ls -la /var/www/html && ls -la /var/www/html/public
