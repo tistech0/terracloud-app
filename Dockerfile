@@ -5,6 +5,7 @@ ENV DOCKERIZE_VERSION v0.9.1
 
 # Définir le contexte de travail
 WORKDIR /var/www/html
+ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
 
 # Installer les extensions PHP nécessaires
 RUN docker-php-ext-install pdo_mysql
@@ -27,7 +28,10 @@ RUN wget -O dockerize.tar.gz https://github.com/jwilder/dockerize/releases/downl
 # Copier les fichiers de l'application
 COPY . /var/www/html/
 
-# Copier le fichier .env.tmpl
+# Vérifier que les fichiers sont correctement copiés (DEBUG)
+RUN ls -la /var/www/html && ls -la /var/www/html/public
+
+# Copier le fichier .env.tmpl et définir les permissions
 COPY .env.tmpl /var/www/html/.env.tmpl
 RUN chmod 644 /var/www/html/.env.tmpl
 RUN chown www-data:www-data /var/www/html/.env.tmpl
@@ -36,12 +40,25 @@ RUN chown www-data:www-data /var/www/html/.env.tmpl
 RUN composer install --optimize-autoloader --no-dev
 
 # Définir les permissions pour Laravel
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
-RUN chmod -R 755 /var/www/html/storage /var/www/html/bootstrap/cache
+RUN chown -R www-data:www-data /var/www/html
+RUN chmod -R 755 /var/www/html
 
 # Modifier la configuration d'Apache pour pointer vers le répertoire public
-ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
-# Activer le module Ap
+# Ajouter une configuration explicite pour Apache
+RUN echo '<Directory /var/www/html/public>\n\
+    AllowOverride All\n\
+    Require all granted\n\
+</Directory>' > /etc/apache2/conf-available/custom-public.conf && \
+    a2enconf custom-public
+
+# Activer le module Apache Rewrite
+RUN a2enmod rewrite
+
+# Exposer le port 80
+EXPOSE 80
+
+# Commande par défaut
+CMD ["sh", "-c", "echo 'Vérification des fichiers copiés :'; ls -la /var/www/html/.env.tmpl /var/www/html/public && dockerize -template /var/www/html/.env.tmpl:/var/www/html/.env apache2-foreground"]
