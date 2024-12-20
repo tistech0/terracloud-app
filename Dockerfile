@@ -3,30 +3,37 @@ FROM php:8.1-apache
 
 ENV DOCKERIZE_VERSION v0.9.1
 
-# Installez les extensions PHP nécessaires
+# Définir le contexte de travail
+WORKDIR /var/www/html
+
+# Installer les extensions PHP nécessaires
 RUN docker-php-ext-install pdo_mysql
 
-# Installez des outils nécessaires
-RUN apt-get update && apt-get install -y git unzip p7zip-full curl wget
+# Installer les outils nécessaires
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        git unzip p7zip-full curl wget && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
-# Installez Composer
+# Installer Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Installez Dockerize (v0.9.1)
+# Installer Dockerize
 RUN wget -O dockerize.tar.gz https://github.com/jwilder/dockerize/releases/download/${DOCKERIZE_VERSION}/dockerize-linux-amd64-${DOCKERIZE_VERSION}.tar.gz \
     && tar -C /usr/local/bin -xzvf dockerize.tar.gz \
     && rm dockerize.tar.gz \
-    && chmod +x /usr/local/bin/dockerize \
-    && apt-get autoremove -yqq --purge wget \
-    && rm -rf /var/lib/apt/lists/*
+    && chmod +x /usr/local/bin/dockerize
 
-# Copiez les fichiers de l'application dans le conteneur
+# Copier les fichiers de l'application
 COPY . /var/www/html/
 
+# Copier le fichier .env.tmpl
 COPY .env.tmpl /var/www/html/.env.tmpl
+RUN chmod 644 /var/www/html/.env.tmpl
+RUN chown www-data:www-data /var/www/html/.env.tmpl
 
-# Installez les dépendances de l'application
-RUN composer install
+# Installer les dépendances Laravel
+RUN composer install --optimize-autoloader --no-dev
 
 # Définir les permissions pour Laravel
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
@@ -37,11 +44,4 @@ ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
-# Activez le module Apache Rewrite
-RUN a2enmod rewrite
-
-# Exposez le port 80
-EXPOSE 80
-
-# Commande par défaut pour valoriser le fichier .env et démarrer Apache
-CMD ["sh", "-c", "printenv && dockerize -template /var/www/html/.env.tmpl:/var/www/html/.env apache2-foreground"]
+# Activer le module Ap
