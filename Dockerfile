@@ -23,6 +23,8 @@ RUN wget -O dockerize.tar.gz https://github.com/jwilder/dockerize/releases/downl
 # Copiez les fichiers de l'application dans le conteneur
 COPY . /var/www/html/
 
+COPY .env.tmpl /var/www/html/.env.tmpl
+
 # Installez les dépendances de l'application
 RUN composer install
 
