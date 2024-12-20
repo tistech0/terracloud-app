@@ -40,12 +40,6 @@ jobs:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
         run: |
-          echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+          echo "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USERNAME" --password-stdin
           docker tag countersepitechapp:latest epitechmscpropromo2025/countersepitechapp:latest
           docker push epitechmscpropromo2025/countersepitechapp:latest
-
-      # Étape 6 : Pousser les fichiers vers le dépôt miroir
-      - uses: pixta-dev/repository-mirroring-action@v1
-        with:
-          target_repo_url: git@github.com:EpitechMscProPromo2025/T-CLO-901-NAN_10.git
-          ssh_private_key: ${{ secrets.SSH_KEY }}
