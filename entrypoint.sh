@@ -15,7 +15,7 @@ chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
 # Générer la clé d'application Laravel
 APP_KEY=$(php artisan key:generate --show)
-echo "APP_KEY=$APP_KEY" >> /var/www/html/.env
+sed -i "s|^APP_KEY=.*|APP_KEY=$APP_KEY|" /var/www/html/.env
 
 # Lancer Apache
 exec apache2-foreground
