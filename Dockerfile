@@ -28,6 +28,7 @@ RUN wget -O dockerize.tar.gz https://github.com/jwilder/dockerize/releases/downl
 
 # Copier les fichiers de l'application
 COPY . /var/www/html/
+COPY .htaccess /var/www/html/public/.htaccess
 
 # Vérifier la présence des fichiers
 RUN echo "Vérification des fichiers copiés" && ls -la /var/www/html/ && ls -la /var/www/html/public
