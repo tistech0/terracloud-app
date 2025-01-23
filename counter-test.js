@@ -27,14 +27,19 @@ import { sleep, check } from 'k6';
 const BASE_URL = 'https://paas-ctgsawbjg0esa4c9.francecentral-01.azurewebsites.net';
 
 export const options = {
-  stages: [
-    { duration: '30s', target: 10 },  // montée à 10 users en 30s
-    { duration: '1m', target: 10 },   // maintien 10 users pendant 1m
-    { duration: '20s', target: 0 }    // descente à 0 en 20s
-  ],
+  scenarios: {
+    constant_rate: {
+      executor: 'constant-arrival-rate',
+      rate: 60, // 60 requêtes par minute (limite API)
+      timeUnit: '1m', // Taux fixé par minute
+      duration: '8m', // Test sur une durée totale de 8 minutes
+      preAllocatedVUs: 10, // Préalloue 10 utilisateurs virtuels
+      maxVUs: 20, // Peut monter jusqu'à 20 utilisateurs simultanés
+    },
+  },
   thresholds: {
-    http_req_duration: ['p(95)<500'], // 95% des requêtes doivent être sous 500ms
-    checks: ['rate>0.9'],             // 90% des checks doivent réussir
+    http_req_duration: ['p(95)<500'], // 95% des requêtes doivent être inférieures à 500 ms
+    checks: ['rate>0.9'], // 90% des checks doivent réussir
   },
 };
 
@@ -43,23 +48,29 @@ export default function () {
   let home = http.get(`${BASE_URL}/`);
   check(home, {
     'home status is 200': (r) => r.status === 200,
-    'home load time OK': (r) => r.timings.duration < 500
+    'home load time OK': (r) => r.timings.duration < 500,
   });
+
+  // Pause de 1 seconde pour respecter le taux de 60 requêtes par minute
   sleep(1);
 
   // Test de l'incrémentation
   let increment = http.get(`${BASE_URL}/api/counter/add`);
   check(increment, {
     'increment status is 200': (r) => r.status === 200,
-    'increment response time OK': (r) => r.timings.duration < 500
+    'increment response time OK': (r) => r.timings.duration < 500,
   });
+
+  // Pause de 1 seconde
   sleep(1);
 
   // Test de la lecture du compteur
   let count = http.get(`${BASE_URL}/api/counter/count`);
   check(count, {
     'count status is 200': (r) => r.status === 200,
-    'count response time OK': (r) => r.timings.duration < 500
+    'count response time OK': (r) => r.timings.duration < 500,
   });
+
+  // Pause de 1 seconde
   sleep(1);
 }
